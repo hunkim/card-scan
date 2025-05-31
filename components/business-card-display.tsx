@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Download, RefreshCw, UserPlus } from "lucide-react"
+import { Download, RefreshCw, UserPlus, Edit3, Save, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -34,9 +34,10 @@ export function BusinessCardDisplay({
   isEditable = true,
 }: BusinessCardDisplayProps) {
   const [editedData, setEditedData] = useState(data)
-  const [lastSavedData, setLastSavedData] = useState(data)
+  const [originalData, setOriginalData] = useState(data)
   const [isExporting, setIsExporting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
 
   // Check if mobile on client side only
   useEffect(() => {
@@ -46,24 +47,8 @@ export function BusinessCardDisplay({
   // Update local state when data prop changes
   useEffect(() => {
     setEditedData(data)
-    setLastSavedData(data)
+    setOriginalData(data)
   }, [data])
-
-  // Auto-save function with debouncing
-  useEffect(() => {
-    // Only auto-save if data has actually changed and onSave is available
-    if (!onSave || !isEditable) return
-    
-    const hasChanges = JSON.stringify(editedData) !== JSON.stringify(lastSavedData)
-    if (!hasChanges) return
-
-    const saveTimer = setTimeout(() => {
-      onSave(editedData)
-      setLastSavedData(editedData)
-    }, 1000) // 1 second debounce
-
-    return () => clearTimeout(saveTimer)
-  }, [editedData, lastSavedData, onSave, isEditable])
 
   const handleFieldChange = (field: keyof BusinessCardData, value: string) => {
     setEditedData(prev => ({
@@ -71,6 +56,26 @@ export function BusinessCardDisplay({
       [field]: value || null
     }))
   }
+
+  const handleEdit = () => {
+    setIsEditMode(true)
+    setOriginalData(editedData) // Store the current state as the original
+  }
+
+  const handleSave = async () => {
+    if (onSave && isEditable) {
+      onSave(editedData)
+    }
+    setIsEditMode(false)
+    setOriginalData(editedData)
+  }
+
+  const handleCancel = () => {
+    setEditedData(originalData) // Revert to original state
+    setIsEditMode(false)
+  }
+
+  const hasChanges = JSON.stringify(editedData) !== JSON.stringify(originalData)
 
   const handleExport = async () => {
     if (isExporting) return
@@ -144,6 +149,46 @@ export function BusinessCardDisplay({
               <span className="hidden sm:inline">Reprocess</span>
             </Button>
           )}
+          
+          {/* Edit/Save Controls */}
+          {isEditable && (
+            <>
+              {isEditMode ? (
+                <>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={handleSave}
+                    disabled={!hasChanges}
+                    className="text-xs sm:text-sm"
+                  >
+                    <Save className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Save</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleCancel}
+                    className="text-xs sm:text-sm"
+                  >
+                    <X className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Cancel</span>
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleEdit}
+                  className="text-xs sm:text-sm"
+                >
+                  <Edit3 className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+              )}
+            </>
+          )}
+          
           <Button 
             variant="outline" 
             size="sm" 
@@ -157,8 +202,8 @@ export function BusinessCardDisplay({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Quick Actions Bar for Mobile - Only show if we have contact info */}
-        {(editedData.phone || editedData.mobile || editedData.email || editedData.website || editedData.linkedin) && (
+        {/* Quick Actions Bar for Mobile - Only show in view mode if we have contact info */}
+        {!isEditMode && (editedData.phone || editedData.mobile || editedData.email || editedData.website || editedData.linkedin) && (
           <div className="md:hidden">
             <div className="p-3 bg-muted/30 rounded-lg">
               <div className="text-xs text-muted-foreground font-medium mb-2">Quick Actions:</div>
@@ -252,7 +297,7 @@ export function BusinessCardDisplay({
                     </Badge>
                   )}
                 </div>
-                {isEditable ? (
+                {isEditMode ? (
                   <Input
                     id={key}
                     type={type}
@@ -286,10 +331,10 @@ export function BusinessCardDisplay({
 
         {data.timestamp && (
           <div className="pt-4 border-t text-sm text-muted-foreground">
-            {isEditable && editedData !== lastSavedData && (
+            {isEditMode && hasChanges && (
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                <span className="text-orange-600">Auto-saving changes...</span>
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                <span className="text-orange-600">You have unsaved changes</span>
               </div>
             )}
             Processed on {new Date(data.timestamp).toLocaleString()}
