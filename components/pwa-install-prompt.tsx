@@ -149,4 +149,67 @@ export function PWAInstallPrompt() {
       </Card>
     </div>
   )
+}
+
+// Hook to use PWA install functionality in other components
+export function usePWAInstall() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [isInstalled, setIsInstalled] = useState(false)
+  const [canInstall, setCanInstall] = useState(false)
+
+  useEffect(() => {
+    // Check if already installed
+    const checkIfInstalled = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      const isInstalled = (window.navigator as any).standalone === true || isStandalone
+      setIsInstalled(isInstalled)
+    }
+
+    checkIfInstalled()
+
+    // Listen for the beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+      setCanInstall(true)
+    }
+
+    // Listen for app installed event
+    const handleAppInstalled = () => {
+      setIsInstalled(true)
+      setCanInstall(false)
+      setDeferredPrompt(null)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const promptInstall = async () => {
+    if (!deferredPrompt) return false
+
+    try {
+      await deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      
+      setDeferredPrompt(null)
+      setCanInstall(false)
+      
+      return outcome === 'accepted'
+    } catch (error) {
+      console.error('Install prompt failed:', error)
+      return false
+    }
+  }
+
+  return {
+    isInstalled,
+    canInstall,
+    promptInstall
+  }
 } 

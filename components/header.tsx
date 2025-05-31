@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { Moon, Sun, LogIn, LogOut, CreditCard, Bug } from "lucide-react"
+import { Moon, Sun, LogIn, LogOut, CreditCard, Bug, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
 import { useTheme } from "next-themes"
+import { usePWAInstall } from "@/components/pwa-install-prompt"
 
 export function Header() {
   const { user, signInWithGoogle, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { isInstalled, canInstall, promptInstall } = usePWAInstall()
 
   // Only render theme-dependent content after mounting to avoid hydration mismatch
   useEffect(() => {
@@ -25,6 +27,13 @@ export function Header() {
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark")
+  }
+
+  const handleInstall = async () => {
+    const success = await promptInstall()
+    if (success) {
+      console.log('PWA installed successfully!')
+    }
   }
 
   return (
@@ -56,6 +65,19 @@ export function Header() {
               <div className="w-4 h-4" />
             )}
           </Button>
+
+          {/* PWA Install Button - Only show on mobile when installable */}
+          {!isInstalled && canInstall && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleInstall}
+              className="md:hidden"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Install
+            </Button>
+          )}
 
           {user ? (
             <DropdownMenu>
