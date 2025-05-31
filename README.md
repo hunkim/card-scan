@@ -1,181 +1,350 @@
-# Business Card Scanner with Upstage AI
+# Card Scan - AI Business Card Scanner
 
-A modern business card scanner that uses Upstage's Information Extraction AI to extract contact information from business card images.
+A modern business card scanner powered by **Upstage Information Extractor** that intelligently extracts contact information from business card images with high accuracy.
 
 ## Features
 
-- 📸 Upload business card images (JPG, PNG, GIF, WebP, PDF)
-- 📋 **Clipboard paste support** - Press Ctrl+V to paste images
-- 🤖 AI-powered information extraction using Upstage
-- 📊 Structured data extraction with comprehensive schema
-- 💾 Save and manage scanned cards
-- 📱 Responsive design with modern UI
-- 🔐 User authentication and personal card library
-- 📤 Export cards to CSV format
+- 📸 **Multi-format Support** - Upload JPG, PNG, GIF, WebP images and PDFs
+- 📋 **Clipboard Support** - Press Ctrl+V (Cmd+V on Mac) to paste images directly
+- 🤖 **AI-Powered Extraction** - Uses Upstage Information Extractor for intelligent data extraction
+- 📊 **Comprehensive Schema** - Extracts 20+ fields including contact details and social media
+- 💾 **Cloud Storage** - Firebase-powered user accounts and card management
+- 🔍 **Smart Search** - Find cards by name, company, email, or phone number
+- 📱 **Mobile-First Design** - Optimized for mobile scanning with camera support
+- 🎯 **Duplicate Detection** - Automatically detects and prevents duplicate cards
+- ✏️ **Real-time Editing** - Auto-save editing with seamless user experience
+- 📤 **CSV Export** - Export individual cards or entire collection
+- 🌓 **Dark Mode** - Modern UI with light/dark theme support
 
-## Upstage Integration
+## Upstage Information Extractor Integration
 
-This application uses Upstage's Information Extraction API to extract business card data. The integration includes:
+This application showcases the power of **Upstage Information Extractor** for document understanding and structured data extraction.
 
-### JSON Schema for Business Cards
+### Why Upstage Information Extractor?
 
-The application uses a comprehensive JSON schema designed specifically for business cards:
+- **High Accuracy**: Advanced AI model specifically trained for document understanding
+- **Structured Output**: Returns data in predefined JSON schemas
+- **Multi-language Support**: Works with business cards in various languages
+- **Robust OCR**: Handles various image qualities and card layouts
+- **Industry-leading Performance**: Outperforms traditional OCR solutions
 
-```json
-{
-  "type": "object",
-  "properties": {
-    "name": { "type": "string", "description": "Full name of the person" },
-    "first_name": { "type": "string", "description": "First name" },
-    "last_name": { "type": "string", "description": "Last name" },
-    "company": { "type": "string", "description": "Company name" },
-    "job_title": { "type": "string", "description": "Job title or position" },
-    "department": { "type": "string", "description": "Department or division" },
-    "phone": { "type": "string", "description": "Primary phone number" },
-    "mobile": { "type": "string", "description": "Mobile phone number" },
-    "fax": { "type": "string", "description": "Fax number" },
-    "email": { "type": "string", "description": "Email address" },
-    "website": { "type": "string", "description": "Website URL" },
-    "address": { "type": "string", "description": "Complete address" },
-    "street_address": { "type": "string", "description": "Street address" },
-    "city": { "type": "string", "description": "City" },
-    "state": { "type": "string", "description": "State or province" },
-    "zip_code": { "type": "string", "description": "ZIP or postal code" },
-    "country": { "type": "string", "description": "Country" },
-    "linkedin": { "type": "string", "description": "LinkedIn profile" },
-    "twitter": { "type": "string", "description": "Twitter handle" },
-    "facebook": { "type": "string", "description": "Facebook profile" },
-    "instagram": { "type": "string", "description": "Instagram handle" },
-    "skype": { "type": "string", "description": "Skype username" },
-    "whatsapp": { "type": "string", "description": "WhatsApp number" },
-    "additional_info": { "type": "string", "description": "Additional information" }
+### Business Card Schema Implementation
+
+The application uses a comprehensive 23-field JSON schema optimized for business cards:
+
+```typescript
+const BUSINESS_CARD_SCHEMA = {
+  type: "json_schema",
+  json_schema: {
+    name: "business_card_schema",
+    schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Full name of the person on the business card" },
+        first_name: { type: "string", description: "First name of the person" },
+        last_name: { type: "string", description: "Last name of the person" },
+        company: { type: "string", description: "Company or organization name" },
+        job_title: { type: "string", description: "Job title, position, or role" },
+        department: { type: "string", description: "Department or division within the company" },
+        phone: { type: "string", description: "Primary phone number" },
+        mobile: { type: "string", description: "Mobile or cell phone number" },
+        fax: { type: "string", description: "Fax number" },
+        email: { type: "string", description: "Email address" },
+        website: { type: "string", description: "Company or personal website URL" },
+        address: { type: "string", description: "Complete physical address" },
+        street_address: { type: "string", description: "Street address line" },
+        city: { type: "string", description: "City name" },
+        state: { type: "string", description: "State or province" },
+        zip_code: { type: "string", description: "ZIP or postal code" },
+        country: { type: "string", description: "Country name" },
+        linkedin: { type: "string", description: "LinkedIn profile URL or username" },
+        twitter: { type: "string", description: "Twitter handle or URL" },
+        facebook: { type: "string", description: "Facebook profile URL" },
+        instagram: { type: "string", description: "Instagram handle or URL" },
+        skype: { type: "string", description: "Skype username" },
+        whatsapp: { type: "string", description: "WhatsApp number" },
+        additional_info: { type: "string", description: "Any additional information or notes found on the card" }
+      }
+    }
   }
 }
 ```
 
-### API Integration
+### API Integration Code
 
-The integration sends images to Upstage's API endpoint:
+Here's how the application integrates with Upstage Information Extractor:
 
-```bash
-curl -k -X "POST" "https://api.upstage.ai/v1/information-extraction" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json; charset=utf-8" \
-  -d '{
-    "model": "information-extract",
-    "messages": [
+```typescript
+// services/ocr-service.ts
+export async function extractBusinessCardData(imageFile: File, apiKey: string): Promise<BusinessCardData> {
+  // Convert image to base64 data URL
+  const imageDataURL = await fileToDataURL(imageFile);
+
+  // Prepare the request payload
+  const payload = {
+    model: "information-extract",
+    messages: [
       {
-        "role": "user",
-        "content": [
+        role: "user",
+        content: [
           {
-            "type": "image_url",
-            "image_url": {
-              "url": "data:image/jpeg;base64,..."
+            type: "image_url",
+            image_url: {
+              url: imageDataURL
             }
           }
         ]
       }
     ],
-    "response_format": { ... },
-    "chunking": {
-      "pages_per_chunk": 1
+    response_format: BUSINESS_CARD_SCHEMA,
+    chunking: {
+      pages_per_chunk: 1
     }
-  }'
+  };
+
+  // Make API request to Upstage
+  const response = await fetch("https://api.upstage.ai/v1/information-extraction", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  const extractedData = JSON.parse(result.choices[0].message.content);
+  
+  // Process and clean the extracted data
+  return processExtractedData(extractedData);
+}
 ```
 
-## Setup
+### Data Processing and Validation
 
-### 1. Get Upstage API Key
-
-1. Sign up at [Upstage Console](https://console.upstage.ai/)
-2. Create an API key for Information Extraction
-3. Copy your API key (starts with `up_`)
-
-### 2. Configure API Key
-
-Edit `lib/config.ts` and replace the placeholder with your actual API key:
+The application includes smart data processing to handle edge cases:
 
 ```typescript
-const UPSTAGE_API_KEY = "your_actual_api_key_here"
+// Smart field extraction with fallbacks
+const name = extractedData.name || buildFullName(extractedData.first_name, extractedData.last_name);
+const address = extractedData.address || buildAddress([
+  extractedData.street_address,
+  extractedData.city, 
+  extractedData.state,
+  extractedData.zip_code,
+  extractedData.country
+]);
+
+// Separate mobile from main phone to avoid duplicates
+const phone = extractedData.phone || extractedData.mobile;
+const mobile = extractedData.mobile && extractedData.mobile !== phone ? extractedData.mobile : null;
 ```
 
-**Security Note**: In production, use environment variables and server-side API routes to protect your API key.
+## Quick Start
+
+### 1. Get Your Upstage API Key
+
+1. Visit [Upstage Console](https://console.upstage.ai/)
+2. Sign up or log in to your account
+3. Navigate to **API Keys** section
+4. Create a new API key for **Information Extraction**
+5. Copy your API key (starts with `up_`)
+
+### 2. Set Up Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```bash
+# Upstage API Key
+NEXT_PUBLIC_UPSTAGE_API_KEY=your_upstage_api_key_here
+
+# Firebase Configuration (optional - for user accounts)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
 
 ### 3. Install Dependencies
 
 ```bash
-npm install
-# or
 pnpm install
+# or
+npm install
 ```
 
-### 4. Run Development Server
+### 4. Run the Application
 
 ```bash
-npm run dev
-# or
 pnpm dev
+# or  
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the application.
+Open [http://localhost:3000](http://localhost:3000) to start scanning business cards!
 
 ## How It Works
 
-1. **Upload**: User uploads a business card image
-2. **Processing**: Image is converted to base64 and sent to Upstage API
-3. **Extraction**: Upstage AI extracts structured data using the defined schema
-4. **Display**: Extracted data is displayed in an editable form
-5. **Save**: Users can save cards to their personal library
-6. **Export**: Cards can be exported to CSV format
+### 1. **Image Upload & Processing**
+- Users upload business card images via drag-and-drop, file selection, or clipboard paste
+- Images are converted to base64 format and resized for optimal processing
+- Thumbnails are generated for efficient list display
 
-## Data Flow
+### 2. **Upstage Information Extractor**
+- Base64 image is sent to Upstage API with the business card schema
+- Advanced AI model analyzes the image and extracts structured data
+- Returns JSON response with identified fields and values
+
+### 3. **Smart Data Processing**
+- Application processes the raw extracted data
+- Handles edge cases like missing names, duplicate phone numbers
+- Builds complete addresses from components
+- Validates and cleans all extracted fields
+
+### 4. **User Experience**
+- Extracted data appears in an editable form with auto-save
+- Users can review and correct any fields
+- Duplicate detection prevents saving identical cards
+- Real-time search and filtering of saved cards
+
+### Data Flow Diagram
 
 ```
-Image Upload → Base64 Conversion → Upstage API → JSON Response → Data Mapping → UI Display
+📸 Image Upload → 🔄 Base64 Conversion → 🤖 Upstage API → 
+📄 JSON Response → 🔧 Data Processing → 💾 Firebase Storage → 
+📱 User Interface
 ```
 
-## File Structure
+## Project Structure
 
-- `services/ocr-service.ts` - Upstage API integration
-- `lib/config.ts` - API key configuration
-- `types/index.ts` - TypeScript interfaces
-- `components/` - React UI components
-- `app.tsx` - Main application logic
+```
+card-scan/
+├── app/                    # Next.js App Router
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home page
+├── components/            # React components
+│   ├── ui/               # Reusable UI components
+│   ├── header.tsx        # App header with auth
+│   ├── file-upload.tsx   # Upload component
+│   ├── business-card-display.tsx  # Card display/edit
+│   └── card-browser.tsx  # Card list management
+├── services/             
+│   ├── ocr-service.ts    # Upstage API integration
+│   └── storage-service.ts # Firebase operations
+├── lib/
+│   ├── config.ts         # Environment configuration
+│   └── firebase.ts       # Firebase initialization
+├── hooks/
+│   └── use-toast.ts      # Toast notifications
+├── contexts/
+│   └── auth-context.tsx  # Authentication state
+├── types/
+│   └── index.ts          # TypeScript interfaces
+└── app.tsx               # Main application
+```
+
+## Environment Configuration
+
+The application uses environment variables for secure configuration:
+
+- **Development**: Uses `.env.local` for local development
+- **Production**: Set environment variables in your deployment platform
+- **Security**: API keys are validated and never exposed to client-side code
+
+```typescript
+// lib/config.ts
+export function getUpstageApiKey(): string {
+  const apiKey = process.env.NEXT_PUBLIC_UPSTAGE_API_KEY;
+  
+  if (!apiKey || apiKey === "your_upstage_api_key_here") {
+    throw new Error("Upstage API key not configured");
+  }
+  
+  return apiKey;
+}
+```
 
 ## Production Deployment
 
-For production deployment:
+### Security Best Practices
 
-1. Set up environment variables for API keys
-2. Implement server-side API routes for secure API calls
-3. Add proper error handling and logging
-4. Configure image storage (e.g., AWS S3, Vercel Blob)
-5. Add rate limiting and usage monitoring
+1. **Environment Variables**: Store all sensitive keys in environment variables
+2. **API Routes**: Consider server-side API routes for additional security
+3. **Rate Limiting**: Implement rate limiting for API calls
+4. **Error Handling**: Add comprehensive error handling and logging
+
+### Deployment Platforms
+
+- **Vercel**: Optimal for Next.js applications
+- **Netlify**: Great alternative with environment variable support  
+- **Firebase Hosting**: Integrates well with Firebase backend
+- **AWS/Google Cloud**: For enterprise deployments
 
 ## Troubleshooting
 
-### API Key Issues
-- Ensure your API key is valid and has Information Extraction permissions
-- Check that the key is properly set in `lib/config.ts`
+### Common Issues
 
-### Image Processing Issues
-- Supported formats: JPG, PNG, GIF, WebP
-- Maximum file size: 10MB
-- Ensure images are clear and readable
+**❌ "Upstage API key not configured"**
+- Ensure `NEXT_PUBLIC_UPSTAGE_API_KEY` is set in `.env.local`
+- Restart development server after adding environment variables
+- Verify API key is valid and has Information Extraction permissions
 
-### Common Errors
-- `401 Unauthorized`: Invalid API key
-- `400 Bad Request`: Invalid image format or payload
-- `429 Too Many Requests`: Rate limit exceeded
+**❌ "401 Unauthorized"**
+- Check API key is correct and hasn't expired
+- Verify you have sufficient credits in your Upstage account
+- Ensure API key has Information Extraction service enabled
+
+**❌ "Failed to extract data from image"**
+- Check image format (JPG, PNG, GIF, WebP supported)
+- Ensure image is clear and readable
+- Try with a different business card image
+- Check image file size (under 10MB recommended)
+
+**❌ Firebase Authentication Issues**
+- Verify all Firebase environment variables are set
+- Check Firebase project configuration
+- Ensure authentication is enabled in Firebase Console
+
+### Performance Tips
+
+- **Image Size**: Resize large images before upload for faster processing
+- **Network**: Ensure stable internet connection for API calls
+- **Browser**: Use modern browsers for optimal performance
+- **Mobile**: Use rear camera for better image quality when scanning
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test with real business card images
-5. Submit a pull request
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Test with real business cards** to ensure accuracy
+4. **Follow TypeScript best practices**
+5. **Update documentation** if needed
+6. **Submit a pull request**
+
+### Development Guidelines
+
+- Use TypeScript for type safety
+- Follow React best practices
+- Test with various business card formats
+- Ensure mobile responsiveness
+- Add proper error handling
+
+## Learn More
+
+- [Upstage Information Extractor Documentation](https://console.upstage.ai/docs/capabilities/information-extraction/universal-information-extraction)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)
 
 ## License
 
-MIT License - see LICENSE file for details 
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+**Built with ❤️ using Upstage Information Extractor** 
