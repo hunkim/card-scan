@@ -1,10 +1,16 @@
 "use client"
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react"
-import { Search, Download, Trash2, Edit3, Calendar, Building, User, Phone, Mail, ChevronDown, ChevronRight, ExternalLink, ChevronUp, ArrowUpDown, UserPlus, Star, CreditCard } from "lucide-react"
+import { Search, Download, Trash2, Edit3, Calendar, Building, User, Phone, Mail, ChevronDown, ChevronRight, ExternalLink, ChevronUp, ArrowUpDown, UserPlus, Star, CreditCard, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -344,6 +350,55 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
           />
         </div>
         <div className="flex gap-2">
+          {/* Mobile Sort Dropdown - Only visible on mobile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="md:hidden">
+                <Filter className="w-4 h-4 mr-2" />
+                Sort
+                <ChevronDown className="w-4 h-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => handleSort("date")}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Date Added
+                {sortBy === "date" && (
+                  <span className="ml-auto text-xs">
+                    {sortDirection === "desc" ? "↓" : "↑"}
+                  </span>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort("name")}>
+                <User className="w-4 h-4 mr-2" />
+                Name
+                {sortBy === "name" && (
+                  <span className="ml-auto text-xs">
+                    {sortDirection === "asc" ? "↓" : "↑"}
+                  </span>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort("company")}>
+                <Building className="w-4 h-4 mr-2" />
+                Company
+                {sortBy === "company" && (
+                  <span className="ml-auto text-xs">
+                    {sortDirection === "asc" ? "↓" : "↑"}
+                  </span>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort("favorite")}>
+                <Star className="w-4 h-4 mr-2" />
+                Favorites
+                {sortBy === "favorite" && (
+                  <span className="ml-auto text-xs">
+                    {sortDirection === "asc" ? "↓" : "↑"}
+                  </span>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button 
             variant="outline" 
             onClick={() => handleSmartExport(filteredCards)} 
