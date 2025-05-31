@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react"
-import { Search, Download, Trash2, Edit3, Calendar, Building, User, Phone, Mail, ChevronDown, ChevronRight, ExternalLink, ChevronUp, ArrowUpDown, UserPlus } from "lucide-react"
+import { Search, Download, Trash2, Edit3, Calendar, Building, User, Phone, Mail, ChevronDown, ChevronRight, ExternalLink, ChevronUp, ArrowUpDown, UserPlus, Star, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +16,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { BusinessCardDisplay } from "@/components/business-card-display"
+import { BusinessCardIcon } from "@/components/icons/business-card-icon"
+import { BusinessCardIconPng } from "@/components/icons/business-card-icon-png"
+import { SimpleBusinessCardIcon } from "@/components/icons/simple-business-card-icon"
 import type { BusinessCardData } from "@/types"
 import { EnhancedStorageService } from "@/services/enhanced-storage-service"
 import { 
@@ -26,6 +29,7 @@ import {
   getExportButtonText 
 } from "@/services/contact-export-service"
 import { useToast } from "@/hooks/use-toast"
+import { useOrganization } from "@/hooks/use-organization"
 
 interface CardBrowserProps {
   userId: string
@@ -43,13 +47,19 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
   const [cards, setCards] = useState<BusinessCardData[]>([])
   const [filteredCards, setFilteredCards] = useState<BusinessCardData[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortBy, setSortBy] = useState<"date" | "name" | "company">("date")
+  const [sortBy, setSortBy] = useState<"date" | "name" | "company" | "favorite">("date")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [loading, setLoading] = useState(true)
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
   const [newCards, setNewCards] = useState<Set<string>>(new Set())
   const [deleteConfirmCard, setDeleteConfirmCard] = useState<BusinessCardData | null>(null)
   const { toast } = useToast()
+  
+  // Organization features
+  const {
+    toggleFavorite,
+    enhanceCards
+  } = useOrganization(userId)
 
   // Helper function to safely format dates
   const formatDate = (timestamp?: string) => {
@@ -89,7 +99,8 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
   const loadCards = async () => {
     try {
       const userCards = await EnhancedStorageService.getCards(userId)
-      setCards(userCards)
+      const enhancedUserCards = enhanceCards(userCards)
+      setCards(enhancedUserCards)
     } catch (error) {
       console.error("Failed to load cards:", error)
     } finally {
@@ -116,7 +127,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
     refreshCards
   }), [])
 
-  const handleSort = (field: "date" | "name" | "company") => {
+  const handleSort = (field: "date" | "name" | "company" | "favorite") => {
     if (sortBy === field) {
       // Toggle direction if same field
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
@@ -157,6 +168,16 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
           break
         case "company":
           comparison = (a.company || "").localeCompare(b.company || "")
+          break
+        case "favorite":
+          // Sort by favorite status, then by name
+          const aFav = a.isFavorite ? 1 : 0
+          const bFav = b.isFavorite ? 1 : 0
+          comparison = bFav - aFav // Favorites first
+          if (comparison === 0) {
+            // If same favorite status, sort by name
+            comparison = (a.name || "").localeCompare(b.name || "")
+          }
           break
         case "date":
         default:
@@ -247,8 +268,32 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
     setExpandedCard(expandedCard === cardId ? null : cardId)
   }
 
+  const handleFavoriteToggle = (cardId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    console.log('Toggling favorite for card ID:', cardId)
+    toggleFavorite(cardId)
+    
+    // Update local state immediately to avoid race condition
+    setCards(prevCards => {
+      const updatedCards = prevCards.map(card => 
+        card.id === cardId 
+          ? { ...card, isFavorite: !card.isFavorite }
+          : card
+      )
+      console.log('Updated cards:', updatedCards.find(c => c.id === cardId))
+      return updatedCards
+    })
+  }
+
+  const handleContactSelect = (contact: BusinessCardData) => {
+    if (contact.id) {
+      setExpandedCard(contact.id)
+    }
+    onCardSelect?.(contact)
+  }
+
   const SortableHeader = ({ field, children, className = "" }: { 
-    field: "date" | "name" | "company", 
+    field: "date" | "name" | "company" | "favorite", 
     children: React.ReactNode,
     className?: string 
   }) => {
@@ -330,7 +375,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
       {/* Cards List */}
       {filteredCards.length === 0 ? (
         <div className="text-center py-12">
-          <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <SimpleBusinessCardIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">{cards.length === 0 ? "No cards yet" : "No cards found"}</h3>
           <p className="text-muted-foreground">
             {cards.length === 0 ? "Upload your first business card to get started" : "Try adjusting your search terms"}
@@ -343,7 +388,10 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
             <div className="grid grid-cols-12 gap-4 items-center text-sm font-medium">
               <div className="col-span-1"></div>
               <div className="col-span-1 text-muted-foreground">Image</div>
-              <div className="col-span-3">
+              <div className="col-span-1">
+                <SortableHeader field="favorite">★</SortableHeader>
+              </div>
+              <div className="col-span-2">
                 <SortableHeader field="name">Name</SortableHeader>
               </div>
               <div className="col-span-3">
@@ -376,7 +424,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                       />
                     ) : (
                       <div className="w-16 h-10 bg-muted rounded border flex items-center justify-center">
-                        <User className="w-4 h-4 text-muted-foreground" />
+                        <SimpleBusinessCardIcon className="w-4 h-4 text-muted-foreground" />
                       </div>
                     )}
                   </div>
@@ -385,6 +433,16 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleFavoriteToggle(card.id!, e)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Star 
+                            className={`w-4 h-4 ${card.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                          />
+                        </Button>
                         <h3 className="font-medium truncate">{card.name || "Unknown Name"}</h3>
                         {newCards.has(card.id!) && (
                           <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600 text-white animate-pulse">
@@ -425,7 +483,6 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                             e.stopPropagation()
                             handleSingleCardExport(card)
                           }}
-                          className="h-8 w-8 p-0"
                         >
                           {isMobileDevice() ? (
                             <UserPlus className="w-3 h-3" />
@@ -440,7 +497,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                             e.stopPropagation()
                             confirmDelete(card)
                           }}
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="w-3 h-3" />
                         </Button>
@@ -475,13 +532,27 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                       />
                     ) : (
                       <div className="w-12 h-8 bg-muted rounded border flex items-center justify-center">
-                        <User className="w-3 h-3 text-muted-foreground" />
+                        <SimpleBusinessCardIcon className="w-4 h-4 text-muted-foreground" />
                       </div>
                     )}
                   </div>
 
+                  {/* Star */}
+                  <div className="col-span-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleFavoriteToggle(card.id!, e)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Star 
+                        className={`w-4 h-4 ${card.isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} 
+                      />
+                    </Button>
+                  </div>
+
                   {/* Name & Title */}
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <div className="flex items-center gap-2">
                       <div className="font-medium">{card.name || "Unknown Name"}</div>
                       {newCards.has(card.id!) && (

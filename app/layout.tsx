@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL('https://card-scan.app'),
   icons: {
-    icon: '/icons/icon-192x192.png',
-    shortcut: '/icons/icon-72x72.png',
-    apple: '/icons/icon-192x192.png',
+    icon: '/icons/icon.png',
+    shortcut: '/icons/icon.png',
+    apple: '/icons/icon.png',
   },
   appleWebApp: {
     capable: true,
@@ -56,10 +56,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Card Scan" />
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-72x72.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="mask-icon" href="/app/icon.svg" color="#2563eb" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon.png" />
+        <link rel="apple-touch-icon" href="/icons/icon.png" />
+        <link rel="mask-icon" href="/icon.svg" color="#2563eb" />
       </head>
       <body suppressHydrationWarning>
         <ThemeProvider

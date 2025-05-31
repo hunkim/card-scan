@@ -11,9 +11,9 @@ import type { BusinessCardData } from "@/types"
 import { 
   exportContactAsVCard, 
   exportAsCSV, 
-  isMobileDevice, 
-  getExportButtonText 
+  isMobileDevice
 } from "@/services/contact-export-service"
+import { QRContactShare } from "@/components/qr-contact-share"
 
 interface BusinessCardDisplayProps {
   data: BusinessCardData
@@ -113,10 +113,11 @@ export function BusinessCardDisplay({
     { key: "website", label: "Website", type: "url" },
     { key: "linkedin", label: "LinkedIn", type: "url" },
     { key: "twitter", label: "Twitter", type: "text" },
+    { key: "notes", label: "Notes", type: "text" },
   ] as const
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-4">
         <CardTitle className="text-lg sm:text-xl">Contact Information</CardTitle>
         <div className="flex flex-wrap gap-2">
@@ -138,20 +139,32 @@ export function BusinessCardDisplay({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Card Image */}
+      <CardContent className="space-y-6">
+        {/* Card Image and QR Code */}
         {data.imageBase64 && (
-          <div className="flex justify-center mb-6">
-            <div className="border rounded-lg overflow-hidden shadow-sm max-w-full">
-              <img 
-                src={data.imageBase64} 
-                alt="Business card image"
-                className="max-w-full h-auto max-h-48 sm:max-h-64 object-contain"
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Business Card Image */}
+            <div className="flex justify-center">
+              <div className="border rounded-lg overflow-hidden shadow-sm max-w-full">
+                <img 
+                  src={data.imageBase64} 
+                  alt="Business card image"
+                  className="max-w-full h-auto max-h-48 sm:max-h-64 object-contain"
+                />
+              </div>
+            </div>
+            
+            {/* QR Code */}
+            <div className="flex justify-center lg:justify-start">
+              <QRContactShare 
+                data={editedData} 
+                className="w-full max-w-sm"
               />
             </div>
           </div>
         )}
 
+        {/* Contact Fields */}
         <div className="grid gap-4 sm:grid-cols-2">
           {fields.map(({ key, label, type }) => {
             const value = editedData[key as keyof BusinessCardData] as string

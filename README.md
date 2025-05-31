@@ -393,4 +393,81 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ using Upstage Information Extractor** 
+**Built with ❤️ using Upstage Information Extractor**
+
+# Business Card Scanner
+
+A modern, offline-capable business card scanner built with Next.js, featuring AI-powered text extraction and smart organization tools.
+
+## Features
+
+### Core Functionality
+- **AI-Powered OCR**: Extract contact information from business card images using advanced OCR technology
+- **Offline Support**: Full offline functionality with automatic sync when back online
+- **Smart Export**: Export contacts as vCard files or CSV, with mobile-optimized "Add to Contacts" functionality
+- **Duplicate Detection**: Automatically detect and prevent duplicate contacts
+- **PWA Support**: Install as a Progressive Web App for native-like experience
+
+### Organization Features ⭐ NEW
+- **Personal Notes**: Add notes directly in the contact form as a regular field
+- **Favorites/Starring**: Mark important contacts as favorites and sort by clicking the star column header
+
+### Technical Features
+- **Real-time Sync**: Automatic background synchronization when online
+- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Type-Safe**: Built with TypeScript for reliability
+- **Modern UI**: Clean, minimal design with Tailwind CSS and shadcn/ui components
+
+## Organization Features Usage
+
+### Adding Notes
+1. Click on any contact to expand its details
+2. Scroll down to the "Notes" field in the contact form
+3. Type your personal notes directly in the field
+4. Notes are saved automatically with the contact
+
+### Marking Favorites
+1. Click the star icon (⭐) next to any contact's name
+2. Starred contacts appear with a filled yellow star right next to their name
+3. Click the star (★) column header to sort favorites to the top
+
+### Sorting Options
+- **Date**: Sort by when the contact was added (newest first)
+- **Name**: Alphabetical sorting by contact name
+- **Company**: Alphabetical sorting by company name  
+- **Favorites (★)**: Show all favorited contacts at the top, then sort by name
+
+## Data Storage
+
+Organization features (notes, favorites) are stored locally in your browser's localStorage, ensuring:
+- **Privacy**: Your personal notes and preferences stay on your device
+- **Performance**: Instant access without network requests
+- **Persistence**: Data persists across browser sessions
+- **User-specific**: Each user account has separate organization data
+
+## Getting Started
+
+1. **Upload a Business Card**: Use the camera or file upload to scan a business card
+2. **Review & Edit**: Check the extracted information and make any necessary corrections
+3. **Save**: The contact is automatically saved to your collection
+4. **Organize**: Add notes and mark favorites by clicking the star next to the name
+5. **Sort & Export**: Use column headers to sort, then export individual contacts or your entire collection
+
+## Technology Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **UI**: Tailwind CSS, shadcn/ui components
+- **OCR**: Upstage Document AI
+- **Storage**: Firebase Firestore with offline support
+- **PWA**: next-pwa for Progressive Web App functionality
+
+## Privacy & Security
+
+- **Local Storage**: Organization features use browser localStorage for privacy
+- **Secure Authentication**: Firebase Authentication with Google Sign-In
+- **Offline-First**: Works completely offline, syncs when online
+- **No Tracking**: Personal notes and preferences never leave your device
+
+---
+
+*Built with modern web technologies for a fast, reliable, and private business card management experience.* 
