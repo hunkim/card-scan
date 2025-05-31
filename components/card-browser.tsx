@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react"
-import { Search, Download, Trash2, Edit3, Calendar, Building, User, Phone, Mail, ChevronDown, ChevronRight, ExternalLink, ChevronUp, ArrowUpDown } from "lucide-react"
+import { Search, Download, Trash2, Edit3, Calendar, Building, User, Phone, Mail, ChevronDown, ChevronRight, ExternalLink, ChevronUp, ArrowUpDown, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +17,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import { BusinessCardDisplay } from "@/components/business-card-display"
 import type { BusinessCardData } from "@/types"
-import { StorageService } from "@/services/storage-service"
+import { EnhancedStorageService } from "@/services/enhanced-storage-service"
+import { 
+  exportContactAsVCard, 
+  exportAsCSV, 
+  smartExport, 
+  isMobileDevice, 
+  getExportButtonText 
+} from "@/services/contact-export-service"
 import { useToast } from "@/hooks/use-toast"
 
 interface CardBrowserProps {
@@ -81,7 +88,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
 
   const loadCards = async () => {
     try {
-      const userCards = await StorageService.getCards(userId)
+      const userCards = await EnhancedStorageService.getCards(userId)
       setCards(userCards)
     } catch (error) {
       console.error("Failed to load cards:", error)
@@ -169,7 +176,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
 
   const handleDeleteCard = async (cardId: string) => {
     try {
-      await StorageService.deleteCard(userId, cardId)
+      await EnhancedStorageService.deleteCard(userId, cardId)
       await loadCards()
       setDeleteConfirmCard(null)
       // No toast notification - just silently delete
@@ -177,7 +184,7 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
       console.error("Failed to delete card:", error)
       toast({
         title: "Delete failed",
-        description: "Failed to delete the business card. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to delete the business card. Please try again.",
         variant: "destructive",
       })
     }
@@ -189,61 +196,51 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
 
   const handleSaveCard = async (data: BusinessCardData) => {
     try {
-      await StorageService.updateCard(userId, data)
+      await EnhancedStorageService.updateCard(userId, data)
       await loadCards()
       // No toast notification - just silently update
     } catch (error) {
       console.error("Failed to save card:", error)
       toast({
         title: "Save failed",
-        description: "Failed to save the business card. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save the business card. Please try again.",
         variant: "destructive",
       })
     }
   }
 
   const exportToCSV = (cardsToExport: BusinessCardData[]) => {
-    const headers = [
-      "Name",
-      "Company",
-      "Job Title",
-      "Phone",
-      "Mobile",
-      "Email",
-      "Address",
-      "Website",
-      "LinkedIn",
-      "Twitter",
-      "Date Added",
-    ]
-    const csvContent = [
-      headers.join(","),
-      ...cardsToExport.map((card) =>
-        [
-          card.name || "",
-          card.company || "",
-          card.jobTitle || "",
-          card.phone || "",
-          card.mobile || "",
-          card.email || "",
-          card.address || "",
-          card.website || "",
-          card.linkedin || "",
-          card.twitter || "",
-          formatDate(card.timestamp),
-        ]
-          .map((field) => `"${field}"`)
-          .join(","),
-      ),
-    ].join("\n")
+    exportAsCSV(cardsToExport)
+  }
 
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `business-cards-${new Date().toISOString().split("T")[0]}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleSmartExport = async (cardsToExport: BusinessCardData[]) => {
+    try {
+      await smartExport(cardsToExport)
+    } catch (error) {
+      console.error('Export failed:', error)
+      toast({
+        title: "Export failed",
+        description: "Failed to export contacts. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSingleCardExport = async (card: BusinessCardData) => {
+    if (isMobileDevice()) {
+      try {
+        await exportContactAsVCard(card)
+      } catch (error) {
+        console.error('Contact export failed:', error)
+        toast({
+          title: "Export failed",
+          description: "Failed to export contact. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } else {
+      exportToCSV([card])
+    }
   }
 
   const toggleCardExpansion = (cardId: string) => {
@@ -308,12 +305,16 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            onClick={() => exportToCSV(filteredCards)} 
+            onClick={() => handleSmartExport(filteredCards)} 
             disabled={filteredCards.length === 0}
             className="shrink-0"
           >
-            <Download className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Export All</span>
+            {isMobileDevice() && filteredCards.length === 1 ? (
+              <UserPlus className="w-4 h-4 sm:mr-2" />
+            ) : (
+              <Download className="w-4 h-4 sm:mr-2" />
+            )}
+            <span className="hidden sm:inline">{getExportButtonText(filteredCards.length)}</span>
           </Button>
         </div>
       </div>
@@ -422,11 +423,15 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            exportToCSV([card])
+                            handleSingleCardExport(card)
                           }}
                           className="h-8 w-8 p-0"
                         >
-                          <Download className="w-3 h-3" />
+                          {isMobileDevice() ? (
+                            <UserPlus className="w-3 h-3" />
+                          ) : (
+                            <Download className="w-3 h-3" />
+                          )}
                         </Button>
                         <Button
                           variant="ghost"
@@ -533,10 +538,14 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation()
-                          exportToCSV([card])
+                          handleSingleCardExport(card)
                         }}
                       >
-                        <Download className="w-3 h-3" />
+                        {isMobileDevice() ? (
+                          <UserPlus className="w-3 h-3" />
+                        ) : (
+                          <Download className="w-3 h-3" />
+                        )}
                       </Button>
                       <Button
                         variant="ghost"

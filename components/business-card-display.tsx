@@ -1,13 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Download, RefreshCw } from "lucide-react"
+import { Download, RefreshCw, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import type { BusinessCardData } from "@/types"
+import { 
+  exportContactAsVCard, 
+  exportAsCSV, 
+  isMobileDevice, 
+  getExportButtonText 
+} from "@/services/contact-export-service"
 
 interface BusinessCardDisplayProps {
   data: BusinessCardData
@@ -26,6 +32,13 @@ export function BusinessCardDisplay({
 }: BusinessCardDisplayProps) {
   const [editedData, setEditedData] = useState(data)
   const [lastSavedData, setLastSavedData] = useState(data)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if mobile on client side only
+  useEffect(() => {
+    setIsMobile(isMobileDevice())
+  }, [])
 
   // Update local state when data prop changes
   useEffect(() => {
@@ -56,12 +69,38 @@ export function BusinessCardDisplay({
     }))
   }
 
+  const handleExport = async () => {
+    if (isExporting) return
+    
+    setIsExporting(true)
+    try {
+      // Use custom export function if provided (for backward compatibility)
+      if (onExport) {
+        onExport()
+      } else {
+        // Smart export based on device
+        if (isMobile) {
+          await exportContactAsVCard(editedData)
+        } else {
+          exportAsCSV([editedData])
+        }
+      }
+    } catch (error) {
+      console.error('Export failed:', error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const getConfidenceColor = (confidence?: number) => {
     if (!confidence) return "secondary"
     if (confidence >= 90) return "default"
     if (confidence >= 70) return "secondary"
     return "destructive"
   }
+
+  const exportButtonText = isMobile ? "Add to Contacts" : "Export Contact"
+  const ExportIcon = isMobile ? UserPlus : Download
 
   const fields = [
     { key: "name", label: "Name", type: "text" },
@@ -87,12 +126,16 @@ export function BusinessCardDisplay({
               <span className="hidden sm:inline">Reprocess</span>
             </Button>
           )}
-          {onExport && (
-            <Button variant="outline" size="sm" onClick={onExport} className="text-xs sm:text-sm">
-              <Download className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Export CSV</span>
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExport} 
+            disabled={isExporting}
+            className="text-xs sm:text-sm"
+          >
+            <ExportIcon className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">{exportButtonText}</span>
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -18,9 +18,12 @@ import { Header } from "@/components/header"
 import { FileUpload, FileUploadRef } from "@/components/file-upload"
 import { BusinessCardDisplay } from "@/components/business-card-display"
 import { CardBrowser, CardBrowserRef } from "@/components/card-browser"
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
+import { OfflineIndicator } from "@/components/offline-indicator"
 import type { BusinessCardData, UploadState } from "@/types"
 import { extractBusinessCardData, uploadImageWithThumbnail } from "@/services/ocr-service"
-import { StorageService } from "@/services/storage-service"
+import { EnhancedStorageService } from "@/services/enhanced-storage-service"
+import { exportAsCSV } from "@/services/contact-export-service"
 import { getUpstageApiKey } from "@/lib/config"
 
 function AppContent() {
@@ -69,8 +72,8 @@ function AppContent() {
 
       // Auto-save for authenticated users and add to list
       if (user) {
-        // Check for duplicates before saving
-        const duplicates = await StorageService.checkForDuplicates(user.uid, data)
+        // Check for duplicates before saving using enhanced storage
+        const duplicates = await EnhancedStorageService.checkForDuplicates(user.uid, data)
         
         if (duplicates.length > 0) {
           // Show duplicate confirmation dialog
@@ -120,8 +123,8 @@ function AppContent() {
     }
 
     try {
-      // Save new card and add to list (for non-authenticated users who sign in)
-      const savedCard = await StorageService.saveCard(user.uid, data)
+      // Save new card using enhanced storage service (with offline support)
+      const savedCard = await EnhancedStorageService.saveCard(user.uid, data)
       
       // Clear the extracted data and show in list instead
       setExtractedData(null)
@@ -129,6 +132,15 @@ function AppContent() {
       // Refresh the list and show the new card expanded
       await cardBrowserRef.current?.refreshCards()
       cardBrowserRef.current?.markCardAsNew(savedCard.id!)
+      
+      // Show appropriate toast based on network status
+      const { isOnline } = EnhancedStorageService.getNetworkStatus()
+      if (!isOnline) {
+        toast({
+          title: "Card saved offline",
+          description: "Your card will sync when you're back online.",
+        })
+      }
       
     } catch (error) {
       console.error('Error saving card:', error)
@@ -141,31 +153,7 @@ function AppContent() {
   }
 
   const handleExportCard = (data: BusinessCardData) => {
-    const csvContent = [
-      "Name,Company,Job Title,Phone,Mobile,Email,Address,Website,LinkedIn,Twitter",
-      [
-        data.name || "",
-        data.company || "",
-        data.jobTitle || "",
-        data.phone || "",
-        data.mobile || "",
-        data.email || "",
-        data.address || "",
-        data.website || "",
-        data.linkedin || "",
-        data.twitter || "",
-      ]
-        .map((field) => `"${field}"`)
-        .join(","),
-    ].join("\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `business-card-${data.name || "unknown"}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    exportAsCSV([data])
   }
 
   const handleReprocess = () => {
@@ -180,7 +168,7 @@ function AppContent() {
   const saveCardDirectly = async (data: BusinessCardData) => {
     if (!user) return
     
-    const savedCard = await StorageService.saveCard(user.uid, data)
+    const savedCard = await EnhancedStorageService.saveCard(user.uid, data)
     
     // Clear any previous extracted data since card will show in list
     setExtractedData(null)
@@ -191,6 +179,15 @@ function AppContent() {
     // Refresh the list and show the new card expanded
     await cardBrowserRef.current?.refreshCards()
     cardBrowserRef.current?.markCardAsNew(savedCard.id!)
+    
+    // Show appropriate toast based on network status
+    const { isOnline } = EnhancedStorageService.getNetworkStatus()
+    if (!isOnline) {
+      toast({
+        title: "Card saved offline",
+        description: "Your card will sync when you're back online.",
+      })
+    }
   }
 
   // Auto-save extracted data when user signs in
@@ -198,8 +195,8 @@ function AppContent() {
     const autoSaveOnLogin = async () => {
       if (user && extractedData && !extractedData.id) {
         try {
-          // Check for duplicates before saving
-          const duplicates = await StorageService.checkForDuplicates(user.uid, extractedData)
+          // Check for duplicates before saving using enhanced storage
+          const duplicates = await EnhancedStorageService.checkForDuplicates(user.uid, extractedData)
           
           if (duplicates.length > 0) {
             // Show duplicate confirmation dialog
@@ -248,6 +245,12 @@ function AppContent() {
       isProcessing: false,
       progress: 0,
     })
+  }
+
+  // Handle sync completion
+  const handleSyncComplete = () => {
+    // Refresh the card browser after sync
+    cardBrowserRef.current?.refreshCards()
   }
 
   const renderContent = () => {
@@ -339,6 +342,7 @@ function AppContent() {
                 <p className="text-sm font-medium">✓ Search and organize contacts</p>
                 <p className="text-sm font-medium">✓ Export to CSV</p>
                 <p className="text-sm font-medium">✓ Auto-save on sign in</p>
+                <p className="text-sm font-medium">✓ Offline access & sync</p>
               </div>
             </div>
           </div>
@@ -363,7 +367,7 @@ function AppContent() {
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
                     <span className="text-xl font-bold text-primary">2</span>
                   </div>
-                  <h3 className="font-semibold">Upstage Information Extractor</h3>
+                  <h3 className="font-semibold">AI Processing</h3>
                   <p className="text-sm text-muted-foreground">
                     Advanced AI instantly extracts all contact information with high accuracy
                   </p>
@@ -381,9 +385,9 @@ function AppContent() {
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
                     <span className="text-xl font-bold text-primary">4</span>
                   </div>
-                  <h3 className="font-semibold">Sign In Benefits</h3>
+                  <h3 className="font-semibold">Offline Support</h3>
                   <p className="text-sm text-muted-foreground">
-                    Secure cloud storage, search all cards, and access from anywhere
+                    Works offline, installs as an app, and syncs when you're back online
                   </p>
                 </div>
               </div>
@@ -396,6 +400,7 @@ function AppContent() {
           <div className="text-center space-y-4 py-8 text-muted-foreground">
             <p className="text-sm max-w-2xl mx-auto">
               Extract contact information from business cards instantly using Upstage Information Extractor.
+              Works offline and syncs when you're back online.
             </p>
             <p className="text-xs">
               Powered by{" "}
@@ -411,7 +416,7 @@ function AppContent() {
             </p>
             <div className="pt-2 border-t border-border/50">
               <p className="text-xs">
-                Open Source Project •{" "}
+                Progressive Web App •{" "}
                 <a 
                   href="https://github.com/hunkim/card-scan" 
                   target="_blank" 
@@ -432,6 +437,11 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* PWA Components */}
+      <PWAInstallPrompt />
+      <OfflineIndicator userId={user?.uid} onSync={handleSyncComplete} />
+      
       <main className="container mx-auto px-4 py-8">{renderContent()}</main>
       
       {/* Duplicate Confirmation Dialog */}
@@ -472,6 +482,11 @@ function AppContent() {
                       <div key={duplicate.id} className="p-3 bg-gray-50 rounded-lg border">
                         <div className="font-medium text-sm">
                           {index + 1}. {duplicate.name || 'Unknown Name'}
+                          {duplicate.id?.startsWith('offline_') && (
+                            <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              Offline
+                            </span>
+                          )}
                         </div>
                         {duplicate.company && (
                           <div className="text-gray-600 text-sm">{duplicate.company}</div>

@@ -15,6 +15,41 @@ A modern business card scanner powered by **Upstage Information Extractor** that
 - ✏️ **Real-time Editing** - Auto-save editing with seamless user experience
 - 📤 **CSV Export** - Export individual cards or entire collection
 - 🌓 **Dark Mode** - Modern UI with light/dark theme support
+- 📲 **Progressive Web App** - Install as native app with offline support
+- 🔄 **Background Sync** - Automatically syncs cards when connection returns
+- 💾 **Offline Storage** - View and scan cards even without internet
+
+## Progressive Web App (PWA) Features
+
+### 🏠 Install to Home Screen
+- **One-click Installation**: Add Card Scan to your device's home screen
+- **Native App Experience**: Runs in standalone mode without browser UI
+- **Cross-platform**: Works on iOS, Android, Windows, macOS, and Linux
+- **Auto-prompt**: Smart install prompt appears after user engagement
+
+### 📱 Offline Functionality
+- **Offline Viewing**: Access all saved business cards without internet
+- **Offline Scanning**: Scan new cards and save them locally
+- **Local Storage**: Uses IndexedDB for robust offline data storage
+- **Smart Caching**: Automatically caches cards for offline access
+
+### 🔄 Background Sync
+- **Automatic Upload**: Cards saved offline sync when connection returns
+- **Background Processing**: Uses service worker for seamless sync
+- **Retry Logic**: Failed uploads retry automatically with exponential backoff
+- **Conflict Resolution**: Handles duplicate detection for offline cards
+
+### 🌐 Network Awareness
+- **Connection Status**: Visual indicators for online/offline state
+- **Pending Sync**: Shows count of cards waiting to upload
+- **Manual Sync**: Force sync button for immediate upload
+- **Graceful Degradation**: Full functionality regardless of connection
+
+### 🔧 Technical Implementation
+- **Service Worker**: Custom service worker for caching and background sync
+- **IndexedDB**: Client-side database for offline card storage
+- **Cache Strategy**: Network-first for data, cache-first for assets
+- **Manifest**: Web app manifest for installation and theming
 
 ## Upstage Information Extractor Integration
 
