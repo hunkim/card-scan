@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
 import { useDropzone } from "react-dropzone"
-import { Upload, X, Clipboard, Camera } from "lucide-react"
+import { Upload, X, Clipboard, Camera, Image } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -27,6 +27,7 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
   const [isMobile, setIsMobile] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Handle mounting and mobile detection properly
   useEffect(() => {
@@ -118,6 +119,7 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
     },
     maxSize: 10 * 1024 * 1024, // 10MB
     multiple: false,
+    noClick: mounted && isMobile, // Disable click on mobile to use custom buttons
   })
 
   const clearPreview = () => {
@@ -133,6 +135,19 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
     setShowCamera(true)
   }
 
+  const openGallery = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      processFile(file)
+    }
+    // Reset the input value so same file can be selected again
+    e.target.value = ''
+  }
+
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
     clearPreview
@@ -143,6 +158,15 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
       ref={containerRef}
       className="w-full max-w-xl mx-auto space-y-3"
     >
+      {/* Hidden file input for gallery browsing */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,application/pdf"
+        onChange={handleFileInputChange}
+        style={{ display: 'none' }}
+      />
+
       {/* Camera Component */}
       <CameraCapture
         isOpen={showCamera}
@@ -155,11 +179,13 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
           <CardContent className="p-4">
             <div
               {...getRootProps()}
-              className={`cursor-pointer text-center space-y-2 ${
+              className={`${!isMobile ? 'cursor-pointer' : ''} text-center space-y-2 ${
                 isDragActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <input {...getInputProps()} capture={mounted && isMobile ? "environment" : undefined} />
+              {/* Only include input for desktop drag & drop */}
+              {!isMobile && <input {...getInputProps()} />}
+              
               <div className="mx-auto w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                 <Upload className="w-5 h-5" />
               </div>
@@ -196,10 +222,19 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
                     <Camera className="w-4 h-4" />
                     Camera
                   </Button>
-                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
-                    <Upload className="w-3 h-3" />
-                    Or tap to upload
-                  </Badge>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openGallery()
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Image className="w-4 h-4" />
+                    Gallery
+                  </Button>
                 </div>
               )}
               
