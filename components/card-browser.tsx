@@ -248,19 +248,15 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
   }
 
   const handleSingleCardExport = async (card: BusinessCardData) => {
-    if (isMobileDevice()) {
-      try {
-        await exportContactAsVCard(card)
-      } catch (error) {
-        console.error('Contact export failed:', error)
-        toast({
-          title: "Export failed",
-          description: "Failed to export contact. Please try again.",
-          variant: "destructive",
-        })
-      }
-    } else {
-      exportToCSV([card])
+    try {
+      await smartExport([card])
+    } catch (error) {
+      console.error('Contact export failed:', error)
+      toast({
+        title: "Export failed",
+        description: "Failed to export contact. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -640,7 +636,6 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                   <BusinessCardDisplay
                     data={card}
                     onSave={handleSaveCard}
-                    onExport={() => exportToCSV([card])}
                     isEditable={true}
                   />
                 </div>

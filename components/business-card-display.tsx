@@ -11,7 +11,9 @@ import type { BusinessCardData } from "@/types"
 import { 
   exportContactAsVCard, 
   exportAsCSV, 
-  isMobileDevice
+  isMobileDevice,
+  smartExport,
+  getExportButtonText
 } from "@/services/contact-export-service"
 import { QRContactShare } from "@/components/qr-contact-share"
 
@@ -78,12 +80,8 @@ export function BusinessCardDisplay({
       if (onExport) {
         onExport()
       } else {
-        // Smart export based on device
-        if (isMobile) {
-          await exportContactAsVCard(editedData)
-        } else {
-          exportAsCSV([editedData])
-        }
+        // Use smart export which automatically chooses the right format
+        await smartExport([editedData])
       }
     } catch (error) {
       console.error('Export failed:', error)
@@ -99,7 +97,7 @@ export function BusinessCardDisplay({
     return "destructive"
   }
 
-  const exportButtonText = isMobile ? "Add to Contacts" : "Export Contact"
+  const exportButtonText = getExportButtonText(1)
   const ExportIcon = isMobile ? UserPlus : Download
 
   const fields = [
