@@ -15,6 +15,7 @@ export interface BusinessCardData {
   imageBase64?: string      // Medium-sized image (512x512) for detail view
   thumbnailBase64?: string  // Small thumbnail (64x64) for list view
   userId?: string
+  originalFilename?: string // Original filename for batch processing reference
   // Organization features
   notes?: string           // Personal notes about the contact
   isFavorite?: boolean     // Whether this contact is marked as favorite

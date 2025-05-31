@@ -24,6 +24,20 @@ import type { BusinessCardData, UploadState } from "@/types"
 import { extractBusinessCardData, uploadImageWithThumbnail } from "@/services/ocr-service"
 import { EnhancedStorageService } from "@/services/enhanced-storage-service"
 import { getUpstageApiKey } from "@/lib/config"
+import { Badge } from "@/components/ui/badge"
+
+interface BatchState {
+  isBatchProcessing: boolean
+  batchProgress: number
+  totalFiles: number
+  processedFiles: number
+  failedFiles: number
+}
+
+interface DuplicateConfirmation {
+  newCard: BusinessCardData
+  duplicates: BusinessCardData[]
+}
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -36,10 +50,14 @@ function AppContent() {
     progress: 0,
   })
   const [extractedData, setExtractedData] = useState<BusinessCardData | null>(null)
-  const [duplicateConfirmation, setDuplicateConfirmation] = useState<{
-    newCard: BusinessCardData
-    duplicates: BusinessCardData[]
-  } | null>(null)
+  const [batchState, setBatchState] = useState<BatchState>({
+    isBatchProcessing: false,
+    batchProgress: 0,
+    totalFiles: 0,
+    processedFiles: 0,
+    failedFiles: 0,
+  })
+  const [duplicateConfirmation, setDuplicateConfirmation] = useState<DuplicateConfirmation | null>(null)
 
   const handleFileSelect = async (file: File) => {
     setUploadState({
@@ -109,6 +127,124 @@ function AppContent() {
         variant: "destructive",
       })
     }
+  }
+
+  const handleBatchSelect = async (files: File[]) => {
+    if (files.length === 0) return
+
+    setBatchState({
+      isBatchProcessing: true,
+      batchProgress: 0,
+      totalFiles: files.length,
+      processedFiles: 0,
+      failedFiles: 0,
+    })
+
+    const results: BusinessCardData[] = []
+    const errors: string[] = []
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      
+      try {
+        // Upload image and generate thumbnail
+        const { imageBase64, thumbnailBase64 } = await uploadImageWithThumbnail(file)
+
+        // Extract data
+        const data = await extractBusinessCardData(file, getUpstageApiKey())
+        data.imageBase64 = imageBase64
+        data.thumbnailBase64 = thumbnailBase64
+
+        // Add filename for reference
+        data.originalFilename = file.name
+
+        results.push(data)
+
+        // Update progress
+        setBatchState(prev => ({
+          ...prev,
+          batchProgress: i + 1,
+          processedFiles: prev.processedFiles + 1,
+        }))
+
+      } catch (error) {
+        console.error(`Error processing file ${file.name}:`, error)
+        errors.push(`${file.name}: Failed to process`)
+        
+        setBatchState(prev => ({
+          ...prev,
+          batchProgress: i + 1,
+          failedFiles: prev.failedFiles + 1,
+        }))
+      }
+    }
+
+    // Process successful results
+    if (results.length > 0) {
+      if (user) {
+        // For authenticated users, save all cards
+        let savedCount = 0
+        let duplicateCount = 0
+
+        for (const data of results) {
+          try {
+            // Check for duplicates
+            const duplicates = await EnhancedStorageService.checkForDuplicates(user.uid, data)
+            
+            if (duplicates.length === 0) {
+              await EnhancedStorageService.saveCard(user.uid, data)
+              savedCount++
+            } else {
+              duplicateCount++
+            }
+          } catch (error) {
+            console.error('Error saving card:', error)
+            errors.push(`${data.originalFilename || 'Unknown'}: Failed to save`)
+          }
+        }
+
+        // Refresh the card browser
+        await cardBrowserRef.current?.refreshCards()
+
+        // Show summary toast
+        const { isOnline } = EnhancedStorageService.getNetworkStatus()
+        if (savedCount > 0) {
+          toast({
+            title: `Batch processing complete`,
+            description: `${savedCount} card${savedCount > 1 ? 's' : ''} saved${duplicateCount > 0 ? `, ${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''} skipped` : ''}${!isOnline ? ' (offline)' : ''}`,
+          })
+        }
+      } else {
+        // For non-authenticated users, show the first result
+        if (results.length === 1) {
+          setExtractedData(results[0])
+        } else {
+          toast({
+            title: "Batch processing complete",
+            description: `${results.length} cards processed. Sign in to save all cards to your collection.`,
+          })
+        }
+      }
+    }
+
+    // Show errors if any
+    if (errors.length > 0) {
+      toast({
+        title: "Some files failed to process",
+        description: `${errors.length} file${errors.length > 1 ? 's' : ''} failed. ${results.length} processed successfully.`,
+        variant: "destructive",
+      })
+    }
+
+    // Clear queue and reset state
+    fileUploadRef.current?.clearQueue()
+    setBatchState({
+      isBatchProcessing: false,
+      batchProgress: 0,
+      totalFiles: 0,
+      processedFiles: 0,
+      failedFiles: 0,
+    })
   }
 
   const handleSaveCard = async (data: BusinessCardData) => {
@@ -269,11 +405,11 @@ function AppContent() {
           </div>
 
           <FileUpload
-            ref={fileUploadRef}
             onFileSelect={handleFileSelect}
             isUploading={uploadState.isUploading}
             progress={uploadState.progress}
             error={uploadState.error}
+            ref={fileUploadRef}
           />
         </div>
       )
@@ -297,11 +433,11 @@ function AppContent() {
         </div>
 
         <FileUpload
-          ref={fileUploadRef}
           onFileSelect={handleFileSelect}
           isUploading={uploadState.isUploading}
           progress={uploadState.progress}
           error={uploadState.error}
+          ref={fileUploadRef}
         />
 
         {extractedData && (

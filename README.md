@@ -397,77 +397,112 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 # Business Card Scanner
 
-A modern, offline-capable business card scanner built with Next.js, featuring AI-powered text extraction and smart organization tools.
+A modern Progressive Web App for extracting contact information from business cards using AI-powered OCR.
 
 ## Features
 
-### Core Functionality
-- **AI-Powered OCR**: Extract contact information from business card images using advanced OCR technology
-- **Offline Support**: Full offline functionality with automatic sync when back online
-- **Smart Export**: Export contacts as vCard files or CSV, with mobile-optimized "Add to Contacts" functionality
-- **Duplicate Detection**: Automatically detect and prevent duplicate contacts
-- **PWA Support**: Install as a Progressive Web App for native-like experience
+### 🚀 **NEW: Automatic Batch Upload**
+- **Smart Detection**: Automatically enters batch mode when multiple files are uploaded
+- **Multiple File Upload**: Drag & drop or select multiple business card images at once
+- **Continuous Camera**: Camera stays open automatically after first capture for multiple photos
+- **Visual Queue**: See all pending images with individual removal options
+- **One-Click Processing**: Process all queued images with a single click
+- **Progress Tracking**: Real-time progress indicator for batch operations
+- **Smart Duplicate Detection**: Automatically detects and skips duplicate cards during batch processing
 
-### Organization Features ⭐ NEW
-- **Personal Notes**: Add notes directly in the contact form as a regular field
-- **Favorites/Starring**: Mark important contacts as favorites and sort by clicking the star column header
+### Core Features
+- **AI-Powered Extraction**: Uses Upstage Information Extractor for high-accuracy data extraction
+- **Offline Support**: Works offline and syncs when back online
+- **Progressive Web App**: Install as a native app on any device
+- **Smart Export**: Contacts format on mobile, CSV on desktop
+- **Duplicate Detection**: Prevents saving duplicate business cards
+- **Search & Organization**: Find and organize your contacts easily
 
-### Technical Features
-- **Real-time Sync**: Automatic background synchronization when online
-- **Responsive Design**: Optimized for both desktop and mobile devices
-- **Type-Safe**: Built with TypeScript for reliability
-- **Modern UI**: Clean, minimal design with Tailwind CSS and shadcn/ui components
+## How Batch Mode Works
 
-## Organization Features Usage
+### 🔄 **Automatic Detection**
+The app automatically switches to batch mode when:
+- Multiple files are dropped or selected at once
+- Multiple images are pasted from clipboard
+- Camera is used to take multiple photos (stays open after first capture)
+- You click "Add More" on a single card preview
 
-### Adding Notes
-1. Click on any contact to expand its details
-2. Scroll down to the "Notes" field in the contact form
-3. Type your personal notes directly in the field
-4. Notes are saved automatically with the contact
+### 📱 **Single vs Batch Behavior**
 
-### Marking Favorites
-1. Click the star icon (⭐) next to any contact's name
-2. Starred contacts appear with a filled yellow star right next to their name
-3. Click the star (★) column header to sort favorites to the top
+**Single Mode (Default):**
+- Upload one image → immediately shows preview and processes
+- Take one photo → camera closes, processes immediately
+- Perfect for quick single card processing
 
-### Sorting Options
-- **Date**: Sort by when the contact was added (newest first)
-- **Name**: Alphabetical sorting by contact name
-- **Company**: Alphabetical sorting by company name  
-- **Favorites (★)**: Show all favorited contacts at the top, then sort by name
+**Batch Mode (Auto-activated):**
+- Upload multiple images → all go to queue
+- Take photo → camera stays open for more captures
+- Shows queue with all pending cards
+- Process all at once with one click
 
-## Data Storage
+### 🎯 **Usage Scenarios**
 
-Organization features (notes, favorites) are stored locally in your browser's localStorage, ensuring:
-- **Privacy**: Your personal notes and preferences stay on your device
-- **Performance**: Instant access without network requests
-- **Persistence**: Data persists across browser sessions
-- **User-specific**: Each user account has separate organization data
+**Quick Single Card:**
+1. Drop one image or take one photo
+2. Review and edit the extracted data
+3. Save to your collection
 
-## Getting Started
+**Multiple Cards:**
+1. Drop multiple images at once (auto-batch mode)
+2. Or take first photo, then keep taking more (camera stays open)
+3. Or upload one card and click "Add More" 
+4. Review queue of all cards
+5. Click "Process All" to extract data from all cards
+6. Cards are automatically saved with duplicate detection
 
-1. **Upload a Business Card**: Use the camera or file upload to scan a business card
-2. **Review & Edit**: Check the extracted information and make any necessary corrections
-3. **Save**: The contact is automatically saved to your collection
-4. **Organize**: Add notes and mark favorites by clicking the star next to the name
-5. **Sort & Export**: Use column headers to sort, then export individual contacts or your entire collection
+### ⭐ **Smart Features**
 
-## Technology Stack
+- **Camera Intelligence**: Automatically keeps camera open when it detects you want multiple captures
+- **Flexible Addition**: Start with single mode, easily add more cards later
+- **Visual Feedback**: Clear indicators show when you're in batch mode
+- **Error Resilience**: Individual card failures don't stop batch processing
+- **Memory Efficient**: Processes cards sequentially to handle large batches
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **UI**: Tailwind CSS, shadcn/ui components
-- **OCR**: Upstage Document AI
-- **Storage**: Firebase Firestore with offline support
-- **PWA**: next-pwa for Progressive Web App functionality
+## Technical Implementation
 
-## Privacy & Security
+### Batch Processing Flow
+1. **Queue Management**: Files are added to a local queue with preview generation
+2. **Parallel Processing**: Each file is processed sequentially with progress tracking
+3. **Duplicate Detection**: Each extracted card is checked against existing cards
+4. **Auto-Save**: Valid cards are automatically saved to user's collection
+5. **Error Handling**: Failed extractions are logged and reported to user
 
-- **Local Storage**: Organization features use browser localStorage for privacy
-- **Secure Authentication**: Firebase Authentication with Google Sign-In
-- **Offline-First**: Works completely offline, syncs when online
-- **No Tracking**: Personal notes and preferences never leave your device
+### UX Design Principles
+- **Non-blocking**: Users can continue adding files while processing
+- **Visual Feedback**: Clear progress indicators and status updates
+- **Error Recovery**: Individual file failures don't stop batch processing
+- **Mobile-First**: Optimized camera workflow for mobile users
+- **Accessibility**: Keyboard navigation and screen reader support
+
+## Use Cases
+
+### Business Networking Events
+- Quickly capture multiple business cards received at conferences
+- Process entire stack of cards in one batch operation
+- Automatic duplicate detection prevents redundant entries
+
+### Office Digitization
+- Bulk digitize existing business card collections
+- Team members can process cards simultaneously
+- Export to CSV for CRM integration
+
+### Sales Teams
+- Rapid contact capture during trade shows
+- Batch processing of leads collected throughout the day
+- Offline capability ensures no data loss
+
+## Performance Considerations
+
+- **Memory Management**: Large batches are processed sequentially to prevent memory issues
+- **Network Optimization**: Offline processing with sync when online
+- **Progress Tracking**: Real-time feedback prevents user confusion
+- **Error Resilience**: Individual failures don't affect other cards in batch
 
 ---
 
-*Built with modern web technologies for a fast, reliable, and private business card management experience.* 
+*Powered by [Upstage Information Extractor](https://console.upstage.ai/docs/capabilities/information-extraction/universal-information-extraction) for accurate business card data extraction.* 
