@@ -2,12 +2,13 @@
 
 import { useCallback, useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
 import { useDropzone } from "react-dropzone"
-import { Upload, X, Clipboard } from "lucide-react"
+import { Upload, X, Clipboard, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { CameraCapture } from "@/components/camera-capture"
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
@@ -24,6 +25,7 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
   const [preview, setPreview] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Handle mounting and mobile detection properly
@@ -122,6 +124,15 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
     setPreview(null)
   }
 
+  const handleCameraCapture = (file: File) => {
+    processFile(file)
+    setShowCamera(false)
+  }
+
+  const openCamera = () => {
+    setShowCamera(true)
+  }
+
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
     clearPreview
@@ -132,6 +143,13 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
       ref={containerRef}
       className="w-full max-w-xl mx-auto space-y-3"
     >
+      {/* Camera Component */}
+      <CameraCapture
+        isOpen={showCamera}
+        onCapture={handleCameraCapture}
+        onClose={() => setShowCamera(false)}
+      />
+
       {!preview && (
         <Card className="border-2 border-dashed transition-colors hover:border-primary/50 relative">
           <CardContent className="p-4">
@@ -161,6 +179,29 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
                   }
                 </p>
               </div>
+              
+              {/* Enhanced Mobile Controls */}
+              {mounted && isMobile && (
+                <div className="flex gap-2 justify-center mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openCamera()
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Camera
+                  </Button>
+                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                    <Upload className="w-3 h-3" />
+                    Or tap to upload
+                  </Badge>
+                </div>
+              )}
               
               {/* Paste hint - only show on desktop and after mounting */}
               {mounted && !isMobile && (
