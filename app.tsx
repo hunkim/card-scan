@@ -23,7 +23,6 @@ import { OfflineIndicator } from "@/components/offline-indicator"
 import type { BusinessCardData, UploadState } from "@/types"
 import { extractBusinessCardData, uploadImageWithThumbnail } from "@/services/ocr-service"
 import { EnhancedStorageService } from "@/services/enhanced-storage-service"
-import { exportAsCSV } from "@/services/contact-export-service"
 import { getUpstageApiKey } from "@/lib/config"
 
 function AppContent() {
@@ -150,10 +149,6 @@ function AppContent() {
         variant: "destructive",
       })
     }
-  }
-
-  const handleExportCard = (data: BusinessCardData) => {
-    exportAsCSV([data])
   }
 
   const handleReprocess = () => {
@@ -313,7 +308,6 @@ function AppContent() {
           <BusinessCardDisplay
             data={extractedData}
             onSave={user ? handleSaveCard : undefined}
-            onExport={() => handleExportCard(extractedData)}
             onReprocess={handleReprocess}
             isEditable={true}
           />
@@ -340,7 +334,7 @@ function AppContent() {
               <div className="space-y-2">
                 <p className="text-sm font-medium">✓ Unlimited card storage</p>
                 <p className="text-sm font-medium">✓ Search and organize contacts</p>
-                <p className="text-sm font-medium">✓ Export to CSV</p>
+                <p className="text-sm font-medium">✓ Smart export (contacts on mobile, CSV on desktop)</p>
                 <p className="text-sm font-medium">✓ Auto-save on sign in</p>
                 <p className="text-sm font-medium">✓ Offline access & sync</p>
               </div>
@@ -378,7 +372,7 @@ function AppContent() {
                   </div>
                   <h3 className="font-semibold">Save & Export</h3>
                   <p className="text-sm text-muted-foreground">
-                    Edit, save to your library, or export to CSV
+                    Edit, save to your library, or export contacts (mobile) / CSV (desktop)
                   </p>
                 </div>
                 <div className="space-y-3">
