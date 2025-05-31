@@ -341,16 +341,16 @@ We welcome contributions! Here's how to get started:
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
-## Open Source
+## Demo
 
-This project is open source and available on GitHub: **[https://github.com/hunkim/card-scan](https://github.com/hunkim/card-scan)**
+🚀 **Try the live application**: **[https://card-scan-steel.vercel.app/](https://card-scan-steel.vercel.app/)**
 
-Feel free to:
-- ⭐ Star the repository if you find it useful
-- 🐛 Report issues or bugs
-- 💡 Suggest new features
-- 🤝 Contribute to the project
-- 🍴 Fork and customize for your needs
+Experience the power of Upstage Information Extractor:
+- 📸 Upload a business card image
+- 🤖 Watch AI extract contact information instantly
+- ✏️ Edit and refine the extracted data
+- 💾 Sign in to save cards to your collection
+- 📱 Test the mobile-optimized scanning experience
 
 ## License
 
