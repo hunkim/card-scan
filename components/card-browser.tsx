@@ -523,6 +523,30 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                       </p>
                     )}
                     
+                    {/* Contact Info for Mobile */}
+                    {(card.phone || card.email) && (
+                      <div className="flex items-center gap-2 mt-2">
+                        {card.phone && (
+                          <InteractiveContactField
+                            type="phone"
+                            value={card.phone}
+                            className="text-xs bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 px-2 py-1 rounded-full"
+                            iconClassName="w-3 h-3"
+                            truncate={true}
+                          />
+                        )}
+                        {card.email && (
+                          <InteractiveContactField
+                            type="email"
+                            value={card.email}
+                            className="text-xs bg-green-50 hover:bg-green-100 dark:bg-green-950 dark:hover:bg-green-900 px-2 py-1 rounded-full"
+                            iconClassName="w-3 h-3"
+                            truncate={true}
+                          />
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between mt-2">
                       <div className="text-xs text-muted-foreground">
                         {formatDate(card.timestamp)}

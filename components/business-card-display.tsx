@@ -157,6 +157,60 @@ export function BusinessCardDisplay({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Quick Actions Bar for Mobile - Only show if we have contact info */}
+        {(editedData.phone || editedData.mobile || editedData.email || editedData.website || editedData.linkedin) && (
+          <div className="md:hidden">
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <div className="text-xs text-muted-foreground font-medium mb-2">Quick Actions:</div>
+              <div className="flex flex-wrap gap-2">
+                {editedData.phone && (
+                  <InteractiveContactField
+                    type="phone"
+                    value={editedData.phone}
+                    className="flex-1 min-w-0 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium justify-center"
+                    iconClassName="w-4 h-4 text-white"
+                  />
+                )}
+                {editedData.mobile && editedData.mobile !== editedData.phone && (
+                  <InteractiveContactField
+                    type="phone"
+                    value={editedData.mobile}
+                    className="flex-1 min-w-0 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium justify-center"
+                    iconClassName="w-4 h-4 text-white"
+                  />
+                )}
+                {editedData.email && (
+                  <InteractiveContactField
+                    type="email"
+                    value={editedData.email}
+                    className="flex-1 min-w-0 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium justify-center"
+                    iconClassName="w-4 h-4 text-white"
+                    truncate={true}
+                  />
+                )}
+                {editedData.website && (
+                  <InteractiveContactField
+                    type="website"
+                    value={editedData.website}
+                    className="flex-1 min-w-0 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-md text-sm font-medium justify-center"
+                    iconClassName="w-4 h-4 text-white"
+                    truncate={true}
+                  />
+                )}
+                {editedData.linkedin && (
+                  <InteractiveContactField
+                    type="linkedin"
+                    value={editedData.linkedin}
+                    className="flex-1 min-w-0 bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded-md text-sm font-medium justify-center"
+                    iconClassName="w-4 h-4 text-white"
+                    truncate={true}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Card Image and QR Code */}
         {data.imageBase64 && (
           <div className="grid gap-6 lg:grid-cols-2">
