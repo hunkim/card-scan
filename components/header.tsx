@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { Moon, Sun, LogIn, LogOut, CreditCard } from "lucide-react"
+import { Moon, Sun, LogIn, LogOut, CreditCard, Bug } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -38,6 +38,16 @@ export function Header() {
         </div>
 
         <nav className="flex items-center space-x-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => window.open("https://github.com/hunkim/card-scan/issues", "_blank")}
+            className="text-sm"
+          >
+            <Bug className="w-4 h-4 mr-2" />
+            Report Issue
+          </Button>
+
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {mounted ? (
               theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />

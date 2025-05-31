@@ -341,6 +341,17 @@ We welcome contributions! Here's how to get started:
 - [Firebase Documentation](https://firebase.google.com/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
+## Open Source
+
+This project is open source and available on GitHub: **[https://github.com/hunkim/card-scan](https://github.com/hunkim/card-scan)**
+
+Feel free to:
+- ⭐ Star the repository if you find it useful
+- 🐛 Report issues or bugs
+- 💡 Suggest new features
+- 🤝 Contribute to the project
+- 🍴 Fork and customize for your needs
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.

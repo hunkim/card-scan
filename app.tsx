@@ -379,6 +379,20 @@ function AppContent() {
               </a>
               {" "}• Advanced AI for document understanding and data extraction
             </p>
+            <div className="pt-2 border-t border-border/50">
+              <p className="text-xs">
+                Open Source Project •{" "}
+                <a 
+                  href="https://github.com/hunkim/card-scan" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-medium"
+                >
+                  View on GitHub
+                </a>
+                {" "}• ⭐ Star if you find it useful
+              </p>
+            </div>
           </div>
         </div>
       </div>
