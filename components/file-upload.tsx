@@ -22,7 +22,22 @@ export interface FileUploadRef {
 
 export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSelect, isUploading, progress = 0, error }, ref) => {
   const [preview, setPreview] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Handle mounting and mobile detection properly
+  useEffect(() => {
+    setMounted(true)
+    setIsMobile(window.innerWidth < 768)
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const processFile = useCallback((file: File) => {
     // Create preview
@@ -103,9 +118,6 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
     multiple: false,
   })
 
-  // Check if we're on mobile
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-
   const clearPreview = () => {
     setPreview(null)
   }
@@ -129,7 +141,7 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
                 isDragActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <input {...getInputProps()} capture={isMobile ? "environment" : undefined} />
+              <input {...getInputProps()} capture={mounted && isMobile ? "environment" : undefined} />
               <div className="mx-auto w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                 <Upload className="w-5 h-5" />
               </div>
@@ -137,21 +149,21 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(({ onFileSe
                 <p className="text-base font-medium">
                   {isDragActive 
                     ? "Drop your business card here" 
-                    : isMobile 
+                    : mounted && isMobile 
                       ? "Scan or upload business card"
                       : "Upload a business card"
                   }
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {isMobile 
+                  {mounted && isMobile 
                     ? "Take photo, upload from gallery, or paste image"
                     : "Drag and drop, click to browse, or press Ctrl+V to paste"
                   }
                 </p>
               </div>
               
-              {/* Paste hint - only show on desktop */}
-              {!isMobile && (
+              {/* Paste hint - only show on desktop and after mounting */}
+              {mounted && !isMobile && (
                 <div className="flex items-center justify-center gap-2 mt-2">
                   <Badge variant="outline" className="flex items-center gap-1 text-xs">
                     <Clipboard className="w-3 h-3" />

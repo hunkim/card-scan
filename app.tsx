@@ -24,7 +24,7 @@ import { StorageService } from "@/services/storage-service"
 import { getUpstageApiKey } from "@/lib/config"
 
 function AppContent() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const { toast } = useToast()
   const cardBrowserRef = useRef<CardBrowserRef>(null)
   const fileUploadRef = useRef<FileUploadRef>(null)
@@ -251,6 +251,36 @@ function AppContent() {
   }
 
   const renderContent = () => {
+    // Show loading state while auth is being determined to avoid hydration issues
+    if (loading) {
+      return (
+        <div className="space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold tracking-tight">Business Card Scanner</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Powered by{" "}
+              <a 
+                href="https://console.upstage.ai/docs/capabilities/information-extraction/universal-information-extraction" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-semibold"
+              >
+                Upstage Information Extractor
+              </a>
+            </p>
+          </div>
+
+          <FileUpload
+            ref={fileUploadRef}
+            onFileSelect={handleFileSelect}
+            isUploading={uploadState.isUploading}
+            progress={uploadState.progress}
+            error={uploadState.error}
+          />
+        </div>
+      )
+    }
+
     return (
       <div className="space-y-8">
         <div className="text-center space-y-4">
