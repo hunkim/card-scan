@@ -36,6 +36,7 @@ import {
 } from "@/services/contact-export-service"
 import { useToast } from "@/hooks/use-toast"
 import { useOrganization } from "@/hooks/use-organization"
+import { InteractiveContactField } from "@/components/interactive-contact-field"
 
 interface CardBrowserProps {
   userId: string
@@ -629,20 +630,36 @@ export const CardBrowser = forwardRef<CardBrowserRef, CardBrowserProps>(({ userI
                   <div className="col-span-2 text-sm">
                     {card.phone && (
                       <div className="flex items-center mb-1">
-                        <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
-                        <span className="truncate">{card.phone}</span>
+                        <InteractiveContactField
+                          type="phone"
+                          value={card.phone}
+                          iconClassName="w-3 h-3 mr-1 text-muted-foreground"
+                          className="text-sm"
+                          truncate={true}
+                        />
                       </div>
                     )}
                     {card.mobile && card.mobile !== card.phone && (
                       <div className="flex items-center mb-1">
-                        <Phone className="w-3 h-3 mr-1 text-muted-foreground" />
-                        <span className="truncate text-xs">M: {card.mobile}</span>
+                        <span className="text-muted-foreground text-xs mr-1">M:</span>
+                        <InteractiveContactField
+                          type="phone"
+                          value={card.mobile}
+                          showIcon={false}
+                          className="text-xs"
+                          truncate={true}
+                        />
                       </div>
                     )}
                     {card.email && (
                       <div className="flex items-center">
-                        <Mail className="w-3 h-3 mr-1 text-muted-foreground" />
-                        <span className="truncate">{card.email}</span>
+                        <InteractiveContactField
+                          type="email"
+                          value={card.email}
+                          iconClassName="w-3 h-3 mr-1 text-muted-foreground"
+                          className="text-sm"
+                          truncate={true}
+                        />
                       </div>
                     )}
                   </div>

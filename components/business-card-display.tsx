@@ -16,6 +16,7 @@ import {
   getExportButtonText
 } from "@/services/contact-export-service"
 import { QRContactShare } from "@/components/qr-contact-share"
+import { InteractiveContactField } from "@/components/interactive-contact-field"
 
 interface BusinessCardDisplayProps {
   data: BusinessCardData
@@ -114,6 +115,24 @@ export function BusinessCardDisplay({
     { key: "notes", label: "Notes", type: "text" },
   ] as const
 
+  const getContactFieldType = (key: string): "phone" | "email" | "website" | "linkedin" | "twitter" | null => {
+    switch (key) {
+      case "phone":
+      case "mobile":
+        return "phone"
+      case "email":
+        return "email"
+      case "website":
+        return "website"
+      case "linkedin":
+        return "linkedin"
+      case "twitter":
+        return "twitter"
+      default:
+        return null
+    }
+  }
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-4">
@@ -167,6 +186,7 @@ export function BusinessCardDisplay({
           {fields.map(({ key, label, type }) => {
             const value = editedData[key as keyof BusinessCardData] as string
             const confidence = data.confidence?.[key]
+            const contactFieldType = getContactFieldType(key)
 
             return (
               <div key={key} className="space-y-2">
@@ -189,7 +209,20 @@ export function BusinessCardDisplay({
                   />
                 ) : (
                   <div className="min-h-[40px] px-3 py-2 border rounded-md bg-muted/50 flex items-center text-sm">
-                    {value || <span className="text-muted-foreground italic">Not detected</span>}
+                    {value ? (
+                      contactFieldType ? (
+                        <InteractiveContactField
+                          type={contactFieldType}
+                          value={value}
+                          showIcon={false}
+                          className="text-sm font-normal"
+                        />
+                      ) : (
+                        value
+                      )
+                    ) : (
+                      <span className="text-muted-foreground italic">Not detected</span>
+                    )}
                   </div>
                 )}
               </div>
